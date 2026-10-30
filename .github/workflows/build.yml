@@ -10,6 +10,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -22,9 +23,21 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Extract project
+      - name: Extract Project
+        run: unzip -o attendance-app.zip -d source
+
+      - name: Download Face Models
         run: |
-          unzip -o attendance-app.zip -d source
+          A=source/app/src/main/assets
+          B=https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12
+          mkdir -p "$A/models"
+
+          curl -fL "$B/dist/face-api.js" -o "$A/face-api.js"
+
+          for f in tiny_face_detector_model face_landmark_68_tiny_model face_recognition_model; do
+            curl -fL "$B/model/$f-weights_manifest.json" -o "$A/models/$f-weights_manifest.json"
+            curl -fL "$B/model/$f.bin" -o "$A/models/$f.bin"
+          done
 
       - name: Build APK
         run: gradle -p source assembleDebug
